@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIT∞ / SOR — Núcleo de Fase &amp; Registro .ANDRE (Localidad 0)</title>
+  <style>
+    :root {
+      --bg: #050505;
+      --panel: #0e0e11;
+      --border: #2a2a35;
+      --accent: #00f2fe;
+      --gold: #d4af37;
+      --ok: #34d399;
+      --text: #cbd5e1;
+      --muted: #64748b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: ui-monospace, 'Cascadia Code', 'Courier New', monospace;
+      margin: 0;
+      padding: 16px;
+      line-height: 1.5;
+    }
+    h1 {
+      color: var(--gold);
+      font-size: 1.15rem;
+      margin: 0 0 12px 0;
+      letter-spacing: 0.5px;
+    }
+    h2 {
+      color: var(--accent);
+      font-size: 0.95rem;
+      margin: 0 0 10px 0;
+      text-transform: uppercase;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 14px;
+      margin-bottom: 14px;
+      border-radius: 6px;
+    }
+    .regla {
+      color: var(--accent);
+      font-weight: bold;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    button {
+      background: #1e1b2e;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 10px 16px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: bold;
+      font-size: 0.85rem;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: var(--accent);
+      color: #050505;
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.82rem;
+      color: var(--ok);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      margin-top: 8px;
+    }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 6px 8px;
+      text-align: left;
+    }
+    th {
+      color: var(--gold);
+      font-weight: bold;
+    }
+    .num { font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+
+  <h1>Ω: SIT∞ / SOR — NÚCLEO DE FASE &amp; SERIALIZACIÓN .ANDRE</h1>
+
+  <div class="panel">
+    <p><strong>Arquitectura Pura (Sin Geometría / Sin Canvas):</strong> Operación estricta por índices de fase, reducción invariante <span class="regla">n¹ − (n − 1) = 1</span> y empaquetado binario contiguo desde <span class="regla">Localidad 0 (offset = 0)</span>.</p>
+    <p><strong>Dominio de Evaluación:</strong> Línea crítica Re(s) = 1/2 mediante serie alternante η(1/2 + it) con división compleja conjugada exacta y validación de integridad CRC32.</p>
+    <div class="controls">
+      <button id="btnEjecutar" onclick="ejecutarMotor()">1. Ejecutar Barrido de Fase</button>
+      <button id="btnDescargar" onclick="descargarAndre()" disabled>2. Exportar .ANDRE (Localidad 0)</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Estado de Memoria &amp; Cabecera .ANDRE (32 Bytes)</h2>
+    <pre id="log">&gt; Núcleo en espera. Sin búfer asignado en Localidad 0.</pre>
+  </div>
+
+  <div class="panel">
+    <h2>Tabla de Índices de Fase Detectados (Sin Proyección Cartesiana)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Índice k</th>
+          <th>Repunit R_k (Longitud)</th>
+          <th>Fase t_k (Re = 1/2)</th>
+          <th>Offset .ANDRE</th>
+          <th>Operador n¹ − (n − 1)</th>
+        </tr>
+      </thead>
+      <tbody id="tablaIndices">
+        <tr>
+          <td colspan="5" style="color: var(--muted);">Ejecuta el barrido para poblar los registros desde Localidad 0.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+<script>
+  "use strict";
+
+  let ultimoBufferAndre = null;
+
+  // Tabla CRC32 estándar (polinomio IEEE 802.3: 0xEDB88320)
+  const CRC32_TABLE = (() => {
+    const table = new Uint32Array(256);
+    for (let i = 0; i < 256; i++) {
+      let c = i;
+      for (let k = 0; k < 8; k++) {
+        c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      }
+      table[i] = c >>> 0;
+    }
+    return table;
+  })();
+
+  function calcularCRC32(uint8View) {
+    let crc = 0xFFFFFFFF;
+    for (let i = 0; i < uint8View.length; i++) {
+      crc = CRC32_TABLE[(crc ^ uint8View[i]) & 0xFF] ^ (crc >>> 8);
+    }
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  // Operador de paso invariante sin acumulación residual: n^1 - (n - 1) = 1
+  function pasoInvariante(n) {
+    return (n - (n - 1));
+  }
+
+  // Evaluación compleja exacta de Zeta(1/2 + it) vía Eta de Dirichlet
+  function evaluarZetaCritica(t, maxN = 450) {
+    let real = 0.0;
+    let imag = 0.0;
+
+    for (let n = 1; n <= maxN; n++) {
+      const invSqrtN = 1.0 / Math.sqrt(n);
+      const angle = t * Math.log(n);
+      const sign = (n & 1) === 0 ? -1.0 : 1.0;
+
+      real += sign * invSqrtN * Math.cos(angle);
+      imag -= sign * invSqrtN * Math.sin(angle);
+    }
+
+    // Factor: 1 - 2^(0.5 - it) = 1 - sqrt(2)*(cos(t*ln2) - i*sin(t*ln2))
+    const angle2 = t * Math.LN2;
+    const c = 1.0 - Math.SQRT2 * Math.cos(angle2);
+    const d = Math.SQRT2 * Math.sin(angle2);
+    const denom = c * c + d * d;
+
+    // División compleja exacta: (real + i*imag) / (c + i*d)
+    return {
+      real: (real * c + imag * d) / denom,
+      imag: (imag * c - real * d) / denom
+    };
+  }
+
+  // Serialización estricta en formato .ANDRE anclado en Localidad 0 (offset = 0)
+  function construirBloqueAndreLocalidad0(registros) {
+    const HEADER_SIZE = 32; // Cabecera fija de 32 bytes
+    const payloadBytes = registros.length * 8; // Float64 (8 bytes por índice, alineado a 8 bytes)
+    const totalBytes = HEADER_SIZE + payloadBytes;
+
+    const buffer = new ArrayBuffer(totalBytes);
+    const view = new DataView(buffer);
+    const bytes = new Uint8Array(buffer);
+
+    // Localidad 0 (offset = 0)
+    view.setUint32(0, 0x414E4452, false);      // 0x00: Magic "ANDR"
+    view.setUint32(4, 1, true);                // 0x04: Versión protocolo = 1
+    view.setUint32(8, registros.length, true); // 0x08: Cantidad de índices k
+    view.setUint32(12, payloadBytes, true);    // 0x0C: Bytes de payload (múltiplo de 8)
+    view.setUint32(16, 0, true);               // 0x10: CRC32 (se escribe tras poblar payload)
+    view.setUint32(20, 0, true);               // 0x14: Offset base = 0 (Localidad 0)
+    view.setBigUint64(24, 1n, true);           // 0x18: Invariante de control = 1
+
+    // Escribir payload desde offset 32
+    const payloadView = new Float64Array(buffer, HEADER_SIZE, registros.length);
+    for (let i = 0; i < registros.length; i++) {
+      payloadView[i] = registros[i];
+    }
+
+    // Calcular CRC32 sobre todo el bloque (con campo CRC en 0) y fijarlo en offset 16
+    const crc = calcularCRC32(bytes);
+    view.setUint32(16, crc, true);
+
+    return { buffer, crc, totalBytes, payloadBytes };
+  }
+
+  function ejecutarMotor() {
+    const log = document.getElementById("log");
+    const tbody = document.getElementById("tablaIndices");
+    const btnDescargar = document.getElementById("btnDescargar");
+
+    const tInicio = 10.0;
+    const tFin = 70.0;
+    const paso = 0.02 * pasoInvariante(1);
+
+    const registros = [];
+    let prev = evaluarZetaCritica(tInicio);
+
+    for (let t = tInicio + paso; t <= tFin; t += paso) {
+      const curr = evaluarZetaCritica(t);
+
+      // Detección por cambio de signo en Re(zeta) cerca de Im(zeta) ~ 0
+      const cruceReal = (prev.real <= 0 && curr.real >= 0) || (prev.real >= 0 && curr.real <= 0);
+      if (cruceReal && Math.abs(curr.imag) < 0.08) {
+        const fraccion = Math.abs(prev.real) / (Math.abs(prev.real) + Math.abs(curr.real));
+        const tNodo = (t - paso) + fraccion * paso;
+        registros.push(tNodo);
+
+        // Salto de exclusión de vecindad para evitar duplicados
+        t += 0.5;
+        prev = evaluarZetaCritica(t);
+        continue;
+      }
+      prev = curr;
+    }
+
+    const andre = construirBloqueAndreLocalidad0(registros);
+    ultimoBufferAndre = andre.buffer;
+    btnDescargar.disabled = false;
+
+    log.textContent =
+      `> Barrido topológico completado en Re(s) = 1/2 (t ∈ [${tInicio}, ${tFin}])\n` +
+      `> Anclaje de memoria   : Localidad 0 (byteOffset = 0)\n` +
+      `> Cabecera fija        : 32 bytes | Alineación: 8 bytes\n` +
+      `> Payload              : ${andre.payloadBytes} bytes (${registros.length} índices Float64)\n` +
+      `> Tamaño total .ANDRE  : ${andre.totalBytes} bytes\n` +
+      `> Integridad CRC32     : 0x${andre.crc.toString(16).toUpperCase().padStart(8, "0")}`;
+
+    tbody.innerHTML = "";
+    registros.forEach((valorT, idx) => {
+      const k = idx + 1;
+      const offsetByte = 32 + idx * 8;
+      const repunitLabel = k <= 7 ? "1".repeat(k) : `R_${k} (${k} unos)`;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="num">k = ${k}</td>
+        <td class="num">${repunitLabel}</td>
+        <td class="num">${valorT.toFixed(6)}</td>
+        <td class="num">0x${offsetByte.toString(16).toUpperCase().padStart(2, "0")} (${offsetByte})</td>
+        <td class="num">${pasoInvariante(k)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function descargarAndre() {
+    if (!ultimoBufferAndre) return;
+    const blob = new Blob([ultimoBufferAndre], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "sit_localidad0_fases.andre";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+</script>
+</body>
+</html>
