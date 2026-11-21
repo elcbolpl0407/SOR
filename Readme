@@ -1,0 +1,30 @@
+# SIT∞ / SOR — Motor de Fase y Protocolo .ANDRE
+
+Este repositorio contiene una implementación en JavaScript puro (sin dependencias) para la evaluación numérica de la función Zeta de Riemann en la línea crítica y un protocolo de serialización binaria propio.
+
+## Características Técnicas
+
+### 1. Motor de Evaluación en Línea Crítica
+* Utiliza la serie alternante η(1/2 + it) para asegurar la convergencia en la línea crítica (Re = 1/2).
+* Implementa división compleja conjugada exacta.
+* **Paso invariante:** Utiliza la identidad `n¹ - (n - 1) = 1` para garantizar la coherencia en el barrido de fase sin acumulación de error.
+* **Refinamiento:** Aplica el método de Newton-Raphson para afinar la posición de los ceros detectados.
+
+### 2. Contenedor Binario .ANDRE
+* Cabecera fija de 32 bytes (Magic `0x414E4452`, versión, longitud, CRC32).
+* Payload de datos anclado en Localidad 0 (offset 0) con alineación de 8 bytes (Float64).
+* Validación de integridad mediante CRC32 (polinomio IEEE 802.3).
+
+## Alcance y Limitaciones (Scope)
+* **Lo que este software hace:** Calcula numéricamente los primeros ceros no triviales de la función Zeta en el rango evaluado y los empaqueta en un formato binario eficiente.
+* **Lo que este software NO hace:** No constituye una demostración matemática de la Hipótesis de Riemann. Encontrar numéricamente los ceros en Re(s) = 1/2 no prueba que todos los ceros del plano complejo estén en esa línea.
+* **Propósito:** Herramienta de ingeniería para cálculo numérico y serialización de alta velocidad.
+
+## Uso
+Abre el archivo `riemman_twitter.html` en cualquier navegador moderno. No requiere servidores ni instalación.
+1. Haz clic en "Ejecutar Barrido de Fase".
+2. La tabla mostrará los índices y la fase detectada.
+3. Haz clic en "Exportar .ANDRE" para descargar el bloque binario validado.
+
+## Autor
+Luis Gómez · CIT∞ · 2026
