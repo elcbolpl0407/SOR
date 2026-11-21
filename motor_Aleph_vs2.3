@@ -1,0 +1,1267 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050505">
+<title>CIT∞ · Motor Aleph Ψ₁ v2.3</title>
+
+<style>
+:root {
+  --bg:#050505;
+  --panel:#111;
+  --gold:#d4af37;
+  --cyan:#00f2fe;
+  --violet:#a855f7;
+  --green:#34d399;
+  --red:#fb7185;
+  --amber:#fbbf24;
+  --muted:#94a3b8;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  padding:18px;
+  background:var(--bg);
+  color:#e5e7eb;
+  font:14px/1.55 "Courier New",monospace;
+}
+main { max-width:1160px; margin:auto; }
+h1,h2 { color:var(--gold); }
+h1 { font-size:clamp(1.3rem,4vw,2rem); }
+h2 { font-size:1.12rem; }
+.panel {
+  background:var(--panel);
+  border:1px solid #6941a5;
+  padding:16px;
+  margin:14px 0;
+  border-radius:10px;
+}
+button {
+  background:var(--violet);
+  color:white;
+  border:0;
+  padding:11px 16px;
+  cursor:pointer;
+  font:bold 14px "Courier New";
+  border-radius:5px;
+  margin:4px;
+}
+button:hover { background:var(--cyan); color:#000; }
+button:disabled { opacity:.5; cursor:wait; }
+input,select {
+  background:#050505;
+  color:white;
+  border:1px solid #555;
+  padding:9px;
+  width:100%;
+  font:14px monospace;
+  border-radius:4px;
+}
+label {
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  margin-bottom:5px;
+}
+.controls {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(145px,1fr));
+  gap:12px;
+  margin:14px 0;
+}
+.kpi {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(145px,1fr));
+  gap:10px;
+}
+.kpi>div {
+  background:#080808;
+  border:1px solid #333;
+  padding:10px;
+  border-radius:6px;
+  min-width:0;
+}
+.kpi strong {
+  display:block;
+  color:var(--cyan);
+  font-size:17px;
+  overflow-wrap:anywhere;
+}
+.resultado { color:var(--green); }
+.warn { color:var(--red); }
+.amber { color:var(--amber); }
+.muted,small { color:var(--muted); }
+pre {
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  color:#cbd5e1;
+  min-height:130px;
+}
+canvas {
+  width:100%;
+  height:auto;
+  background:#000;
+  border:1px solid #333;
+  display:block;
+  margin-top:12px;
+}
+.table-wrap { overflow-x:auto; }
+table {
+  width:100%;
+  min-width:850px;
+  border-collapse:collapse;
+  font-size:12px;
+}
+td,th {
+  padding:7px;
+  border-bottom:1px solid #333;
+  text-align:left;
+  white-space:nowrap;
+}
+th { color:var(--gold); }
+.tag {
+  display:inline-block;
+  padding:2px 7px;
+  border:1px solid #555;
+  border-radius:4px;
+  font-size:11px;
+}
+.note {
+  border-left:3px solid var(--gold);
+  padding:8px 12px;
+  background:#17130a;
+}
+.legend {
+  display:flex;
+  flex-wrap:wrap;
+  gap:14px;
+  color:var(--muted);
+  font-size:12px;
+}
+.dot {
+  display:inline-block;
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  margin-right:5px;
+}
+@media(max-width:520px) {
+  body { padding:10px; }
+  .panel { padding:12px; }
+  button { width:100%; margin:4px 0; }
+}
+</style>
+</head>
+
+<body>
+<main>
+
+<h1>Ω: MOTOR ALEPH Ψ₁ — CIT∞ · RIEMANN v2.3</h1>
+
+<p class="muted">
+Motor Float64 · Euler–Maclaurin · Corte adaptativo ·
+Contraste N/N+ΔN · Hardy Z · Bisección · Auditoría REF_17
+</p>
+
+<section class="panel">
+  <h2>1. Núcleo matemático y alcance</h2>
+
+  <p>
+    Se evalúa ζ(1/2 + it) mediante la fórmula de Euler–Maclaurin.
+    La función de Hardy Z(t) se obtiene mediante la fase θ(t),
+    calculada a partir de logΓ con aproximación de Lanczos y reflexión.
+  </p>
+
+  <p>
+    Cada candidato se contrasta con dos cortes de suma:
+    N y N+ΔN. La diferencia entre ambas evaluaciones funciona
+    como indicador numérico de estabilidad, no como cota rigurosa
+    del error.
+  </p>
+
+  <div class="resultado">
+    IDENTIDAD 1:1 · n¹ − (n−1) = 1
+  </div>
+
+  <p class="note">
+    <strong>Importante:</strong> la coincidencia con ceros conocidos,
+    un residuo pequeño y la estabilidad entre dos cortes no constituyen
+    una demostración formal de la hipótesis de Riemann.
+    Los resultados son exploratorios y dependen de la precisión Float64.
+  </p>
+
+  <p class="muted">
+    La fórmula de Euler–Maclaurin sustituye aquí a la transformación
+    de Euler por diferencias finitas como evaluador principal.
+    Esto evita depender de diferencias de orden elevado, que pueden
+    amplificar la cancelación numérica.
+  </p>
+</section>
+
+<section class="panel">
+  <h2>2. Parámetros del motor</h2>
+
+  <div class="controls">
+    <div>
+      <label for="tMin">t inicial</label>
+      <input id="tMin" type="number" value="10" step="0.1">
+    </div>
+    <div>
+      <label for="tMax">t final</label>
+      <input id="tMax" type="number" value="70" step="0.1">
+    </div>
+    <div>
+      <label for="step">Paso de exploración</label>
+      <input id="step" type="number" value="0.05"
+             min="0.005" max="1" step="0.005">
+    </div>
+    <div>
+      <label for="nMode">Modo de N</label>
+      <select id="nMode">
+        <option value="adaptive" selected>Adaptativo</option>
+        <option value="fixed">Fijo</option>
+      </select>
+    </div>
+    <div>
+      <label for="terms">N base (16–256)</label>
+      <input id="terms" type="number" value="96"
+             min="16" max="256" step="4">
+    </div>
+    <div>
+      <label for="tol">Tolerancia de bisección</label>
+      <input id="tol" type="number" value="1e-9"
+             min="1e-12" max="0.001" step="any">
+    </div>
+    <div>
+      <label for="stabilityTol">Tolerancia estabilidad</label>
+      <input id="stabilityTol" type="number" value="1e-6"
+             min="1e-12" max="0.01" step="any">
+    </div>
+  </div>
+
+  <button id="runBtn" onclick="ejecutarMotor()">
+    EJECUTAR BARRIDO CIT∞
+  </button>
+
+  <button id="pointBtn" onclick="evaluarPunto()">
+    EVALUAR t PUNTUAL
+  </button>
+
+  <div class="controls">
+    <div>
+      <label for="tPoint">Valor puntual de t</label>
+      <input id="tPoint" type="number"
+             value="14.134725142" step="any">
+    </div>
+  </div>
+
+  <div class="kpi">
+    <div>
+      <small>Identidad 1:1</small>
+      <strong id="calib">Pendiente</strong>
+    </div>
+    <div>
+      <small>Evaluaciones ζ</small>
+      <strong id="evals">0</strong>
+    </div>
+    <div>
+      <small>Candidatos</small>
+      <strong id="candidateCount">0</strong>
+    </div>
+    <div>
+      <small>Estables y aceptados</small>
+      <strong id="count">0</strong>
+    </div>
+    <div>
+      <small>Auditoría REF_17</small>
+      <strong id="audit">Pendiente</strong>
+    </div>
+    <div>
+      <small>Estado</small>
+      <strong id="status">En espera</strong>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>3. Registro de ejecución</h2>
+  <pre id="log">> CIT∞ v2.3 listo.</pre>
+</section>
+
+<section class="panel">
+  <h2>4. Tabla de candidatos</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>t refinado</th>
+          <th>N / N2</th>
+          <th>Z(t)</th>
+          <th>|ζ|</th>
+          <th>Δ estabilidad</th>
+          <th>Fuga Im(Z)</th>
+          <th>Ancho intervalo</th>
+          <th>Error REF</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>5. Catalejo CIT∞ — Hardy Z(t)</h2>
+  <canvas id="plot" width="1100" height="400"></canvas>
+  <div class="legend">
+    <span><i class="dot" style="background:#00f2fe"></i>Hardy Z(t)</span>
+    <span><i class="dot" style="background:#d4af37"></i>Candidato aceptado</span>
+    <span><i class="dot" style="background:#fb7185"></i>Candidato inestable</span>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>6. Criterios de clasificación</h2>
+  <p><span class="tag resultado">ESTABLE</span>
+    Residuo inferior a 1e-4 y diferencia entre cortes inferior
+    a la tolerancia configurada.</p>
+  <p><span class="tag warn">INESTABLE</span>
+    El contraste entre N y N+ΔN supera la tolerancia.</p>
+  <p><span class="tag amber">NO RESUELTO</span>
+    El candidato no satisface el filtro de residuo o no puede
+    validarse numéricamente.</p>
+  <p class="muted">
+    La fuga imaginaria de Hardy Z se informa como diagnóstico adicional.
+    No se usa por sí sola para aceptar o rechazar un cero.
+  </p>
+</section>
+
+</main>
+
+<script>
+"use strict";
+
+// =====================================================
+// CIT∞ · MOTOR ALEPH Ψ₁ v2.3
+// =====================================================
+
+let evaluaciones = 0;
+let ultimaCurva = [];
+let registrosActuales = [];
+
+const PI = Math.PI;
+const LN2 = Math.LN2;
+const RESIDUAL_LIMIT = 1e-4;
+const N_MAX = 256;
+const T_MAX_ABS = 500;
+
+// Coeficientes B_(2k)/(2k)! de Euler–Maclaurin.
+const EM_COEFFICIENTS = [
+  1 / 12,
+  -1 / 720,
+  1 / 30240,
+  -1 / 1209600,
+  1 / 47900160,
+  -691 / 1307674368000,
+  1 / 74724249600,
+  -3617 / 10670622842880000
+];
+
+const REF_ZEROS_17 = [
+  14.134725142,
+  21.022039639,
+  25.010857580,
+  30.424876126,
+  32.935061588,
+  37.586178159,
+  40.918719012,
+  43.327073281,
+  48.005150881,
+  49.773832478,
+  52.970321478,
+  56.446247697,
+  59.347044003,
+  60.831778525,
+  65.112544048,
+  67.079810529,
+  69.546401711
+];
+
+// =====================================================
+// 1. ARITMÉTICA COMPLEJA
+// =====================================================
+
+const C = (r=0, i=0) => ({r,i});
+
+const add = (a,b) =>
+  C(a.r+b.r, a.i+b.i);
+
+const sub = (a,b) =>
+  C(a.r-b.r, a.i-b.i);
+
+const mul = (a,b) =>
+  C(
+    a.r*b.r-a.i*b.i,
+    a.r*b.i+a.i*b.r
+  );
+
+const scale = (a,k) =>
+  C(a.r*k, a.i*k);
+
+const div = (a,b) => {
+  const d = b.r*b.r+b.i*b.i;
+  if (d === 0) return C(NaN,NaN);
+
+  return C(
+    (a.r*b.r+a.i*b.i)/d,
+    (a.i*b.r-a.r*b.i)/d
+  );
+};
+
+const absC = z => Math.hypot(z.r,z.i);
+
+const logC = z =>
+  C(Math.log(absC(z)),Math.atan2(z.i,z.r));
+
+const expC = z => {
+  const e = Math.exp(z.r);
+  return C(e*Math.cos(z.i),e*Math.sin(z.i));
+};
+
+const finiteC = z =>
+  Number.isFinite(z.r) && Number.isFinite(z.i);
+
+function powPositiveBase(base, exponent) {
+  const l = Math.log(base);
+  return expC(C(exponent.r*l,exponent.i*l));
+}
+
+// =====================================================
+// 2. ORDEN N Y CONTRASTE
+// =====================================================
+
+function resolveOrderN(t,nBase,mode) {
+  const base = Math.max(
+    16,
+    Math.min(N_MAX,Math.floor(nBase))
+  );
+
+  if (mode === "fixed") return base;
+
+  // Crecimiento moderado con t.
+  const adaptive = Math.ceil(
+    base + 0.35*Math.abs(t)
+  );
+
+  return Math.max(
+    base,
+    Math.min(N_MAX,adaptive)
+  );
+}
+
+function contrastOrder(N) {
+  const delta = Math.max(16,Math.ceil(N*0.25));
+  return Math.min(N_MAX,N+delta);
+}
+
+// =====================================================
+// 3. LOG GAMMA COMPLEJA: LANCZOS + REFLEXIÓN
+// =====================================================
+
+function logGamma(z) {
+  const p = [
+    0.99999999999980993,
+    676.5203681218851,
+    -1259.1392167224028,
+    771.32342877765313,
+    -176.61502916214059,
+    12.507343278686905,
+    -0.13857109526572012,
+    9.9843695780195716e-6,
+    1.5056327351493116e-7
+  ];
+
+  if (z.r < 0.5) {
+    const oneMinus = C(1-z.r,-z.i);
+    const a = scale(z,PI);
+
+    const sinZ = C(
+      Math.sin(a.r)*Math.cosh(a.i),
+      Math.cos(a.r)*Math.sinh(a.i)
+    );
+
+    return sub(
+      sub(C(Math.log(PI),0),logC(sinZ)),
+      logGamma(oneMinus)
+    );
+  }
+
+  const zz = C(z.r-1,z.i);
+  let x = C(p[0],0);
+
+  for (let j=1;j<p.length;j++) {
+    x = add(
+      x,
+      div(C(p[j],0),C(zz.r+j,zz.i))
+    );
+  }
+
+  const t = C(zz.r+7.5,zz.i);
+  const first = mul(C(zz.r+0.5,zz.i),logC(t));
+  const second = sub(logC(x),t);
+
+  return add(
+    C(0.5*Math.log(2*PI),0),
+    add(first,second)
+  );
+}
+
+// =====================================================
+// 4. ZETA MEDIANTE EULER–MACLAURIN
+// =====================================================
+
+function zetaEulerMaclaurin(t,N) {
+  // s = 1/2 + it
+  const s = C(0.5,t);
+
+  // Suma n=1,...,N-1 de n^(-s)
+  let sum = C(0,0);
+
+  for (let n=1;n<N;n++) {
+    const angle = -t*Math.log(n);
+    const weight = 1/Math.sqrt(n);
+
+    sum = add(
+      sum,
+      C(
+        weight*Math.cos(angle),
+        weight*Math.sin(angle)
+      )
+    );
+  }
+
+  // N^(1-s)/(s-1)
+  const oneMinusS = C(1-s.r,-s.i);
+  const numerator = powPositiveBase(N,oneMinusS);
+  const denominator = C(s.r-1,s.i);
+
+  let result = add(sum,div(numerator,denominator));
+
+  // 1/2 * N^(-s)
+  const minusS = C(-s.r,-s.i);
+  const nMinusS = powPositiveBase(N,minusS);
+
+  result = add(result,scale(nMinusS,0.5));
+
+  // Bernoulli corrections:
+  // c_k * (s)_(2k-1) * N^(-s-2k+1)
+  let rising = C(1,0);
+
+  for (let k=1;k<=EM_COEFFICIENTS.length;k++) {
+    const target = 2*k-1;
+
+    // Actualiza el factorial ascendente desde el término anterior.
+    if (k===1) {
+      rising = C(s.r,s.i);
+    } else {
+      rising = mul(
+        rising,
+        C(s.r+target-1,s.i)
+      );
+      rising = mul(
+        rising,
+        C(s.r+target,s.i)
+      );
+    }
+
+    const exponent = C(
+      -s.r-target,
+      -s.i
+    );
+
+    const power = powPositiveBase(N,exponent);
+
+    const correction = scale(
+      mul(rising,power),
+      EM_COEFFICIENTS[k-1]
+    );
+
+    result = add(result,correction);
+  }
+
+  return result;
+}
+
+// =====================================================
+// 5. HARDY Z(t)
+// =====================================================
+
+function thetaHardy(t) {
+  const lg = logGamma(C(0.25,t/2));
+  return lg.i-(t/2)*Math.log(PI);
+}
+
+function evaluateHardy(t,N) {
+  const zeta = zetaEulerMaclaurin(t,N);
+  const theta = thetaHardy(t);
+
+  const phase = C(Math.cos(theta),Math.sin(theta));
+  const rotated = mul(phase,zeta);
+
+  evaluaciones++;
+
+  return {
+    zeta,
+    theta,
+    value:rotated.r,
+    imaginaryLeak:rotated.i,
+    N
+  };
+}
+
+function evaluateContrast(t,N) {
+  const N2 = contrastOrder(N);
+
+  const first = evaluateHardy(t,N);
+  const second = evaluateHardy(t,N2);
+
+  return {
+    first,
+    second,
+    N2,
+    stability:absC(sub(first.zeta,second.zeta))
+  };
+}
+
+// =====================================================
+// 6. IDENTIDAD 1:1
+// =====================================================
+
+function identidadOK() {
+  for (let n=1;n<=1000;n++) {
+    if (Math.pow(n,1)-(n-1)!==1) return false;
+  }
+  return true;
+}
+
+// =====================================================
+// 7. BISECCIÓN
+// =====================================================
+
+function bisecar(a,b,fa,fb,nBase,mode,tol) {
+  let lo=a;
+  let hi=b;
+  let flo=fa;
+
+  if (!Number.isFinite(fa) || !Number.isFinite(fb)) {
+    return null;
+  }
+
+  if (Math.sign(fa)===Math.sign(fb)) {
+    return null;
+  }
+
+  let iterations=0;
+
+  while (
+    iterations<100 &&
+    (hi-lo)>tol
+  ) {
+    const mid=(lo+hi)/2;
+    const N=resolveOrderN(mid,nBase,mode);
+    const fm=evaluateHardy(mid,N).value;
+
+    if (!Number.isFinite(fm)) return null;
+
+    if (fm===0) {
+      lo=mid;
+      hi=mid;
+      break;
+    }
+
+    if (Math.sign(flo)!==Math.sign(fm)) {
+      hi=mid;
+    } else {
+      lo=mid;
+      flo=fm;
+    }
+
+    iterations++;
+  }
+
+  return {
+    root:(lo+hi)/2,
+    bracketWidth:hi-lo,
+    iterations
+  };
+}
+
+// =====================================================
+// 8. AUDITORÍA REF_17: EMPAREJAMIENTO UNO A UNO
+// =====================================================
+
+function auditarReferencias(ceros,tMin,tMax) {
+  const expected=REF_ZEROS_17.filter(
+    z=>z>=tMin && z<=tMax
+  );
+
+  const available=ceros
+    .map(c=>c.t)
+    .sort((a,b)=>a-b);
+
+  const used=new Set();
+  const matches=[];
+  const missing=[];
+
+  for (const ref of expected) {
+    let bestIndex=-1;
+    let bestError=Infinity;
+
+    for (let i=0;i<available.length;i++) {
+      if (used.has(i)) continue;
+
+      const error=Math.abs(available[i]-ref);
+
+      if (error<bestError) {
+        bestError=error;
+        bestIndex=i;
+      }
+    }
+
+    if (bestIndex>=0 && bestError<0.05) {
+      used.add(bestIndex);
+      matches.push({
+        reference:ref,
+        computed:available[bestIndex],
+        error:bestError
+      });
+    } else {
+      missing.push(ref);
+    }
+  }
+
+  const maxError=matches.length
+    ?Math.max(...matches.map(x=>x.error))
+    :0;
+
+  return {
+    expected:expected.length,
+    matched:matches.length,
+    missing,
+    matches,
+    maxError,
+    extra:available.length-used.size
+  };
+}
+
+// =====================================================
+// 9. CLASIFICACIÓN DEL CANDIDATO
+// =====================================================
+
+function inspectCandidate(root,bi,nBase,mode,stabilityTol) {
+  const N=resolveOrderN(root,nBase,mode);
+  const contrast=evaluateContrast(root,N);
+
+  const residual=absC(contrast.second.zeta);
+  const stable=contrast.stability<=stabilityTol;
+  const residualOK=Number.isFinite(residual) &&
+                   residual<RESIDUAL_LIMIT;
+
+  let status="NO RESUELTO";
+
+  if (stable && residualOK) {
+    status="ESTABLE";
+  } else if (!stable) {
+    status="INESTABLE";
+  }
+
+  return {
+    t:root,
+    N,
+    N2:contrast.N2,
+    zValue:contrast.second.value,
+    residual,
+    stability:contrast.stability,
+    imaginaryLeak:Math.abs(contrast.second.imaginaryLeak),
+    bracketWidth:bi.bracketWidth,
+    iterations:bi.iterations,
+    stable,
+    residualOK,
+    status
+  };
+}
+
+// =====================================================
+// 10. VALIDACIÓN DE PARÁMETROS
+// =====================================================
+
+function readParameters() {
+  const p={
+    tMin:Number(document.getElementById("tMin").value),
+    tMax:Number(document.getElementById("tMax").value),
+    step:Number(document.getElementById("step").value),
+    mode:document.getElementById("nMode").value,
+    nBase:Number(document.getElementById("terms").value),
+    tol:Number(document.getElementById("tol").value),
+    stabilityTol:Number(
+      document.getElementById("stabilityTol").value
+    )
+  };
+
+  const values=[
+    p.tMin,p.tMax,p.step,p.nBase,p.tol,p.stabilityTol
+  ];
+
+  if (!values.every(Number.isFinite)) {
+    throw new Error("Hay parámetros no numéricos.");
+  }
+
+  if (!(p.tMax>p.tMin)) {
+    throw new Error("t final debe ser mayor que t inicial.");
+  }
+
+  if (!(p.step>=0.005 && p.step<=1)) {
+    throw new Error("El paso debe estar entre 0.005 y 1.");
+  }
+
+  if (Math.max(Math.abs(p.tMin),Math.abs(p.tMax))>T_MAX_ABS) {
+    throw new Error("El rango permitido es |t| ≤ 500.");
+  }
+
+  if (!(p.nBase>=16 && p.nBase<=N_MAX)) {
+    throw new Error("N base debe estar entre 16 y 256.");
+  }
+
+  if (!(p.tol>=1e-12 && p.tol<=0.001)) {
+    throw new Error("Tolerancia de bisección fuera de rango.");
+  }
+
+  if (!(p.stabilityTol>=1e-12 && p.stabilityTol<=0.01)) {
+    throw new Error("Tolerancia de estabilidad fuera de rango.");
+  }
+
+  const count=Math.ceil((p.tMax-p.tMin)/p.step);
+
+  if (count>20000) {
+    throw new Error("Barrido demasiado grande para esta versión.");
+  }
+
+  return p;
+}
+
+// =====================================================
+// 11. EJECUCIÓN DEL BARRIDO
+// =====================================================
+
+function ejecutarMotor() {
+  const btn=document.getElementById("runBtn");
+  const log=document.getElementById("log");
+
+  let p;
+
+  try {
+    p=readParameters();
+  } catch(error) {
+    log.textContent="> ERROR DE PARÁMETROS: "+error.message;
+    return;
+  }
+
+  btn.disabled=true;
+  document.getElementById("pointBtn").disabled=true;
+
+  evaluaciones=0;
+  ultimaCurva=[];
+  registrosActuales=[];
+
+  document.getElementById("rows").innerHTML="";
+  document.getElementById("count").textContent="0";
+  document.getElementById("candidateCount").textContent="0";
+  document.getElementById("audit").textContent="En proceso";
+  document.getElementById("status").textContent="Calculando";
+
+  const calibration=identidadOK();
+
+  document.getElementById("calib").textContent=
+    calibration?"OK · 1000/1000":"FALLÓ";
+
+  log.textContent=
+    "> CIT∞ v2.3: inicio\n"+
+    "> Intervalo: ["+p.tMin+", "+p.tMax+"]\n"+
+    "> Paso: "+p.step+"\n"+
+    "> Modo N: "+p.mode+" | N base: "+p.nBase+"\n"+
+    "> Método: Euler–Maclaurin\n"+
+    "> Contraste: N / N+ΔN\n"+
+    "> Identidad 1:1: "+(calibration?"CONSISTENTE":"FALLÓ")+"\n";
+
+  try {
+    const maxSteps=Math.ceil(
+      (p.tMax-p.tMin)/p.step
+    );
+
+    let prevT=p.tMin;
+    let prevN=resolveOrderN(prevT,p.nBase,p.mode);
+    let prev=evaluateHardy(prevT,prevN).value;
+
+    ultimaCurva.push({t:prevT,y:prev});
+
+    const candidates=[];
+
+    for (let q=1;q<=maxSteps;q++) {
+      const t=Math.min(p.tMin+q*p.step,p.tMax);
+      const N=resolveOrderN(t,p.nBase,p.mode);
+      const y=evaluateHardy(t,N).value;
+
+      ultimaCurva.push({t,y});
+
+      if (
+        Number.isFinite(prev) &&
+        Number.isFinite(y) &&
+        prev!==0 &&
+        y!==0 &&
+        Math.sign(prev)!==Math.sign(y)
+      ) {
+        candidates.push({
+          a:prevT,
+          b:t,
+          fa:prev,
+          fb:y
+        });
+      }
+
+      prevT=t;
+      prev=y;
+    }
+
+    const found=[];
+
+    for (const candidate of candidates) {
+      const bi=bisecar(
+        candidate.a,
+        candidate.b,
+        candidate.fa,
+        candidate.fb,
+        p.nBase,
+        p.mode,
+        p.tol
+      );
+
+      if (!bi) continue;
+
+      const duplicate=found.some(
+        x=>Math.abs(x.t-bi.root)<Math.max(p.tol*4,1e-7)
+      );
+
+      if (duplicate) continue;
+
+      const inspected=inspectCandidate(
+        bi.root,
+        bi,
+        p.nBase,
+        p.mode,
+        p.stabilityTol
+      );
+
+      found.push(inspected);
+    }
+
+    found.sort((a,b)=>a.t-b.t);
+    registrosActuales=found;
+
+    const accepted=found.filter(
+      x=>x.status==="ESTABLE"
+    );
+
+    const audit=auditarReferencias(
+      accepted,
+      p.tMin,
+      p.tMax
+    );
+
+    renderTable(found);
+    renderLog(p,found,accepted,audit,calibration);
+
+    document.getElementById("candidateCount").textContent=
+      found.length;
+
+    document.getElementById("count").textContent=
+      accepted.length;
+
+    document.getElementById("audit").textContent=
+      audit.matched+"/"+audit.expected;
+
+    document.getElementById("evals").textContent=
+      evaluaciones.toLocaleString("es-MX");
+
+    document.getElementById("status").textContent=
+      "Finalizado";
+
+    dibujarGrafica();
+
+  } catch(error) {
+    log.textContent+="\n> ERROR: "+error.message;
+    document.getElementById("status").textContent="Error";
+  } finally {
+    btn.disabled=false;
+    document.getElementById("pointBtn").disabled=false;
+  }
+}
+
+// =====================================================
+// 12. TABLA
+// =====================================================
+
+function renderTable(records) {
+  const tbody=document.getElementById("rows");
+  tbody.innerHTML="";
+
+  records.forEach((r,index)=>{
+    const tr=document.createElement("tr");
+
+    const refError=nearestReferenceError(r.t);
+
+    const values=[
+      index+1,
+      r.t.toFixed(9),
+      r.N+" / "+r.N2,
+      r.zValue.toExponential(3),
+      r.residual.toExponential(3),
+      r.stability.toExponential(3),
+      r.imaginaryLeak.toExponential(3),
+      r.bracketWidth.toExponential(2),
+      refError===null?"—":refError.toExponential(2),
+      r.status
+    ];
+
+    values.forEach((value,i)=>{
+      const td=document.createElement("td");
+      td.textContent=value;
+
+      if (i===9) {
+        td.className=
+          r.status==="ESTABLE"?"resultado":
+          r.status==="INESTABLE"?"warn":"amber";
+      }
+
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+function nearestReferenceError(t) {
+  let best=Infinity;
+
+  for (const ref of REF_ZEROS_17) {
+    best=Math.min(best,Math.abs(t-ref));
+  }
+
+  return best<0.05?best:null;
+}
+
+// =====================================================
+// 13. REGISTRO
+// =====================================================
+
+function renderLog(p,found,accepted,audit,calibration) {
+  const log=document.getElementById("log");
+
+  const unstable=found.filter(
+    x=>x.status==="INESTABLE"
+  ).length;
+
+  const unresolved=found.filter(
+    x=>x.status==="NO RESUELTO"
+  ).length;
+
+  log.textContent+=
+    "> Barrido completado.\n"+
+    "> Cambios de signo detectados: "+found.length+"\n"+
+    "> Estables y aceptados: "+accepted.length+"\n"+
+    "> Inestables: "+unstable+"\n"+
+    "> No resueltos: "+unresolved+"\n"+
+    "> Auditoría REF_17: "+audit.matched+
+    "/"+audit.expected+"\n"+
+    "> Coincidencias adicionales: "+audit.extra+"\n"+
+    "> Error máximo REF: "+audit.maxError.toExponential(4)+"\n"+
+    "> Evaluaciones ζ: "+evaluaciones+"\n"+
+    "> Identidad 1:1: "+(calibration?"OK":"FALLÓ")+"\n";
+
+  if (audit.missing.length) {
+    log.textContent+="> Referencias no emparejadas: "+
+      audit.missing.map(x=>x.toFixed(6)).join(", ")+"\n";
+  }
+
+  for (let i=0;i<found.length;i++) {
+    const r=found[i];
+
+    log.textContent+=
+      "> #"+(i+1)+
+      " t="+r.t.toFixed(9)+
+      " |ζ|="+r.residual.toExponential(3)+
+      " | ΔN="+r.stability.toExponential(3)+
+      " | "+r.status+"\n";
+  }
+
+  log.textContent+=
+    "> Fin del registro. Resultados Float64 no certificados formalmente.";
+}
+
+// =====================================================
+// 14. EVALUACIÓN PUNTUAL
+// =====================================================
+
+function evaluarPunto() {
+  const t=Number(document.getElementById("tPoint").value);
+
+  let p;
+
+  try {
+    p=readParameters();
+  } catch(error) {
+    document.getElementById("log").textContent=
+      "> ERROR: "+error.message;
+    return;
+  }
+
+  if (!Number.isFinite(t) || Math.abs(t)>T_MAX_ABS) {
+    document.getElementById("log").textContent=
+      "> t puntual inválido. Rango admitido: |t| ≤ 500.";
+    return;
+  }
+
+  evaluaciones=0;
+
+  const N=resolveOrderN(t,p.nBase,p.mode);
+  const contrast=evaluateContrast(t,N);
+
+  const a=contrast.first;
+  const b=contrast.second;
+
+  const residual=absC(b.zeta);
+
+  document.getElementById("evals").textContent=evaluaciones;
+
+  document.getElementById("log").textContent=
+    "> EVALUACIÓN PUNTUAL CIT∞ v2.3\n"+
+    "> t = "+t+"\n"+
+    "> N = "+N+" | N2 = "+contrast.N2+"\n"+
+    "> Hardy Z (N) = "+a.value.toPrecision(14)+"\n"+
+    "> Hardy Z (N2) = "+b.value.toPrecision(14)+"\n"+
+    "> Re ζ (N2) = "+b.zeta.r.toPrecision(14)+"\n"+
+    "> Im ζ (N2) = "+b.zeta.i.toPrecision(14)+"\n"+
+    "> |ζ| (N2) = "+residual.toExponential(10)+"\n"+
+    "> Diferencia entre cortes = "+
+      contrast.stability.toExponential(10)+"\n"+
+    "> Fuga imaginaria Hardy Z = "+
+      Math.abs(b.imaginaryLeak).toExponential(10)+"\n"+
+    "> Theta = "+b.theta.toPrecision(14)+"\n"+
+    "> Evaluaciones ζ = "+evaluaciones+"\n"+
+    "> Diagnóstico: "+
+      (contrast.stability<=p.stabilityTol?
+        "ESTABLE ENTRE CORTES":
+        "REQUIERE MAYOR ESTABILIDAD")+"\n";
+}
+
+// =====================================================
+// 15. CATALEJO
+// =====================================================
+
+function dibujarGrafica() {
+  const canvas=document.getElementById("plot");
+  const ctx=canvas.getContext("2d");
+
+  const w=canvas.width;
+  const h=canvas.height;
+
+  ctx.clearRect(0,0,w,h);
+
+  if (!ultimaCurva.length) return;
+
+  let ymin=Infinity;
+  let ymax=-Infinity;
+
+  for (const p of ultimaCurva) {
+    if (!Number.isFinite(p.y)) continue;
+    ymin=Math.min(ymin,p.y);
+    ymax=Math.max(ymax,p.y);
+  }
+
+  if (!Number.isFinite(ymin) || !Number.isFinite(ymax)) return;
+
+  const bound=Math.max(
+    1,
+    Math.min(20,Math.max(Math.abs(ymin),Math.abs(ymax)))
+  );
+
+  const t0=ultimaCurva[0].t;
+  const t1=ultimaCurva[ultimaCurva.length-1].t;
+
+  const X=t=>30+(t-t0)/(t1-t0)*(w-50);
+  const Y=y=>h/2-
+    (Math.max(-bound,Math.min(bound,y))/bound)*(h/2-28);
+
+  ctx.strokeStyle="#333";
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(30,h/2);
+  ctx.lineTo(w-15,h/2);
+  ctx.stroke();
+
+  ctx.fillStyle="#94a3b8";
+  ctx.font="12px monospace";
+  ctx.fillText("0",8,h/2-5);
+  ctx.fillText("+"+bound.toFixed(1),3,25);
+  ctx.fillText("-"+bound.toFixed(1),3,h-12);
+
+  ctx.strokeStyle="#00f2fe";
+  ctx.lineWidth=1.5;
+  ctx.beginPath();
+
+  let started=false;
+
+  for (const p of ultimaCurva) {
+    if (!Number.isFinite(p.y)) {
+      started=false;
+      continue;
+    }
+
+    if (!started) {
+      ctx.moveTo(X(p.t),Y(p.y));
+      started=true;
+    } else {
+      ctx.lineTo(X(p.t),Y(p.y));
+    }
+  }
+
+  ctx.stroke();
+
+  for (const r of registrosActuales) {
+    const x=X(r.t);
+
+    ctx.strokeStyle=
+      r.status==="ESTABLE"?"#d4af37":"#fb7185";
+
+    ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(x,18);
+    ctx.lineTo(x,h-18);
+    ctx.stroke();
+
+    ctx.fillStyle=ctx.strokeStyle;
+    ctx.beginPath();
+    ctx.arc(x,h/2,4,0,2*PI);
+    ctx.fill();
+  }
+
+  ctx.fillStyle="#94a3b8";
+  ctx.fillText("t = "+t0.toFixed(2),30,h-5);
+  ctx.fillText("t = "+t1.toFixed(2),w-115,h-5);
+}
+</script>
+
+</body>
+</html>
