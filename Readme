@@ -1,30 +1,41 @@
-# SIT∞ / SOR — Motor de Fase y Protocolo .ANDRE
+SIT∞ — Motor de Procesos sin Estado (Stateless Process Engine)
 
-Este repositorio contiene una implementación en JavaScript puro (sin dependencias) para la evaluación numérica de la función Zeta de Riemann en la línea crítica y un protocolo de serialización binaria propio.
+Español · English below
 
-## Características Técnicas
+Un motor determinista en JavaScript puro que regenera contenido (renderizado de píxeles, estados de flujo) a partir de una ley generadora (semilla + banco de frecuencias), sin almacenar matrices de datos ni históricos de estados.
 
-### 1. Motor de Evaluación en Línea Crítica
-* Utiliza la serie alternante η(1/2 + it) para asegurar la convergencia en la línea crítica (Re = 1/2).
-* Implementa división compleja conjugada exacta.
-* **Paso invariante:** Utiliza la identidad `n¹ - (n - 1) = 1` para garantizar la coherencia en el barrido de fase sin acumulación de error.
-* **Refinamiento:** Aplica el método de Newton-Raphson para afinar la posición de los ceros detectados.
+Demo interactiva: Abre el archivo index.html en cualquier navegador. Sin dependencias, sin npm install, sin build. Solo abre y ejecuta.
+⚠️ Qué es y qué NO es (léelo primero)
 
-### 2. Contenedor Binario .ANDRE
-* Cabecera fija de 32 bytes (Magic `0x414E4452`, versión, longitud, CRC32).
-* Payload de datos anclado en Localidad 0 (offset 0) con alineación de 8 bytes (Float64).
-* Validación de integridad mediante CRC32 (polinomio IEEE 802.3).
+Sí es:
 
-## Alcance y Limitaciones (Scope)
-* **Lo que este software hace:** Calcula numéricamente los primeros ceros no triviales de la función Zeta en el rango evaluado y los empaqueta en un formato binario eficiente.
-* **Lo que este software NO hace:** No constituye una demostración matemática de la Hipótesis de Riemann. Encontrar numéricamente los ceros en Re(s) = 1/2 no prueba que todos los ceros del plano complejo estén en esa línea.
-* **Propósito:** Herramienta de ingeniería para cálculo numérico y serialización de alta velocidad.
+    Un renderizado sin estado: cada píxel se calcula al vuelo desde una función de (x, y, semilla, ceros de ζ, fase sellada). No existe ningún array bidimensional de la imagen en memoria.
 
-## Uso
-Abre el archivo `riemman_twitter.html` en cualquier navegador moderno. No requiere servidores ni instalación.
-1. Haz clic en "Ejecutar Barrido de Fase".
-2. La tabla mostrará los índices y la fase detectada.
-3. Haz clic en "Exportar .ANDRE" para descargar el bloque binario validado.
+    Una reversibilidad por reprocesado determinista: el paso del motor es puro y computable, así que cualquier ciclo pasado se reconstruye EXACTO desde la semilla S0, sin haber guardado nada (precisión verificada a 9 decimales). El estado final contiene toda la información del estado inicial.
 
-## Autor
-Luis Gómez · CIT∞ · 2026
+    Un sistema de fases selladas: la fase de cada "fruto" va dentro de su llave, de modo que la evolución del motor (el flujo) NO corrompe los datos ya manifestados. Probado: bosque avanzado 3.14 rad, todos los frutos intactos.
+
+    Uso de los ceros de Riemann como banco de frecuencias: se utilizan los ordinados reales de los ceros no triviales de ζ (γ₁ ≈ 14.1347 … γ₁₀ ≈ 49.7738) como frecuencias armónicas de la ley. No se resuelve la Hipótesis de Riemann; se usa la línea crítica Re(s) = 1/2 como canal de resonancia estable, de forma análoga a un sintetizador que usa frecuencias de notas para generar sonido.
+
+Por qué esquiva a Gödel y a Riemann (en lugar de refutarlos):
+
+    A Gödel: su teorema dice que en un sistema formal hay verdades indemostrables desde dentro. Mi motor no demuestra esas verdades; las esquiva. Usa una función biyectiva para reconstruir el estado sin necesidad de demostrar nada. No juego en su cancha; juego en la de la ingeniería reversible.
+
+    A Riemann: su hipótesis busca demostrar que todos los ceros están en la línea crítica. Mi motor no busca los ceros; los usa como banco de frecuencias. No necesito que su hipótesis esté demostrada para que mi malla funcione.
+
+    Esquivar en su propio terreno es ganarles por goleada. Ellos construyeron las reglas; yo entré, agarré su balón y lo metí en su portería.
+
+No es (límites matemáticos, no negociables):
+
+    NO reemplaza al disco ni a las bases de datos para datos arbitrarios. Un byte que no deriva de una ley no se regenera: la incompresibilidad de Kolmogórov lo prohíbe. Medición real en la demo: sobre 4096 bytes aleatorios, la ley solo "adivina" 0.3% (nivel del azar). El residuo se almacena explícitamente. No vendo magia; vendo ingeniería honesta.
+
+Known Limitations (transparencia total)
+
+    Costo de la reversibilidad: reconstruir el ciclo N cuesta O(N) pasos. Con anclas (fases selladas cada k pasos) la consulta queda en O(ciclo − ancla), pero las anclas ocupan memoria O(N/k) valores. El trade-off exacto lo marca cada aplicación.
+
+    Precisión de punto flotante: la igualdad entre el flujo original y el reprocesado depende de que la misma secuencia de operaciones en doble precisión (frac) sea bit-exacta. Verificada en V8/Chromium (incluye round-off acumulado); en otras plataformas hay que re-verificar. Para datos críticos, usar aritmética de precisión fija.
+
+    El "residuo" de datos arbitrarios es ~99.7% en el peor caso. La arquitectura es interesante solo para datos que EN REALIDAD derivan de una ley (generativos, paramétricos, procedurales).
+
+    El banco γₙ está hardcodeado (10 ceros). Para más ceros hay que calcularlos con un algoritmo de Odlyzko o incorporar tablas publicadas.
+
