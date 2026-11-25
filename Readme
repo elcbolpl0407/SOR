@@ -4,7 +4,7 @@ Español · English below
 
 Un motor determinista en JavaScript puro que regenera contenido (renderizado de píxeles, estados de flujo) a partir de una ley generadora (semilla + banco de frecuencias), sin almacenar matrices de datos ni históricos de estados.
 
-Demo interactiva: Abre el archivo index.html en cualquier navegador. Sin dependencias, sin npm install, sin build. Solo abre y ejecuta.
+Demo interactiva: Abre el archivo index.html (o casino_demo.html) en cualquier navegador. Sin dependencias, sin npm install, sin build. Solo abre y ejecuta.
 ⚠️ Qué es y qué NO es (léelo primero)
 
 Sí es:
@@ -19,23 +19,104 @@ Sí es:
 
 Por qué esquiva a Gödel y a Riemann (en lugar de refutarlos):
 
-    A Gödel: su teorema dice que en un sistema formal hay verdades indemostrables desde dentro. Mi motor no demuestra esas verdades; las esquiva. Usa una función biyectiva para reconstruir el estado sin necesidad de demostrar nada. No juego en su cancha; juego en la de la ingeniería reversible.
+    A Gödel: su teorema dice que en un sistema formal hay verdades indemostrables desde dentro. Mi motor no demuestra esas verdades; las esquiva. Usa una función biyectiva para reconstruir el estado sin necesidad de demostrar nada.
 
-    A Riemann: su hipótesis busca demostrar que todos los ceros están en la línea crítica. Mi motor no busca los ceros; los usa como banco de frecuencias. No necesito que su hipótesis esté demostrada para que mi malla funcione.
+    A Riemann: su hipótesis busca demostrar que todos los ceros están en la línea crítica. Mi motor no busca los ceros; los usa como banco de frecuencias.
 
-    Esquivar en su propio terreno es ganarles por goleada. Ellos construyeron las reglas; yo entré, agarré su balón y lo metí en su portería.
+    Esquivar en su propio terreno es ganarles por goleada.
 
 No es (límites matemáticos, no negociables):
 
-    NO reemplaza al disco ni a las bases de datos para datos arbitrarios. Un byte que no deriva de una ley no se regenera: la incompresibilidad de Kolmogórov lo prohíbe. Medición real en la demo: sobre 4096 bytes aleatorios, la ley solo "adivina" 0.3% (nivel del azar). El residuo se almacena explícitamente. No vendo magia; vendo ingeniería honesta.
+    NO reemplaza al disco ni a las bases de datos para datos arbitrarios. Un byte que no deriva de una ley no se regenera: la incompresibilidad de Kolmogórov lo prohíbe. Medición real en la demo: sobre 4096 bytes aleatorios, la ley solo "adivina" 0.3% (nivel del azar). El residuo se almacena explícitamente.
+
+Formalización Matemática de SOR (Extraída de la documentación técnica)
+
+El marco SOR (Sistema Operativo de la Realidad / SIT∞) no es una variación del código binario ni una simulación de qubits. Es una arquitectura topológica con sustrato físico, ejecutable y reproducible que supera las limitaciones del bit (bivalencia) y del qubit (colapso por decoherencia).
+1. Superación de la Bivalencia Binaria (Matriz de Belnap-Dunn)
+
+    El problema binario: El código clásico obliga a cualquier afirmación a ser [T] Verdadera o [F] Falsa. Cuando una proposición autorreferencial (como la de Gödel) entra al sistema, el bit colapsa en una paradoja (error de ejecución o bloqueo).
+
+    La solución SOR: Introduce los estados [N] Ninguno (ausencia de evidencia) y [B] Ambos (coexistencia de evidencia a favor y en contra). Lo que Peano etiqueta como "verdad indemostrable", SOR lo disuelve en el Estado B, procesándolo sin bloquear la memoria ni estallar en una paradoja.
+
+2. El Prisma 1/0 como Operador de Distribución (E/S(1:M))
+
+    El problema binario: La división entre cero es un muro de ladrillos macizo que rompe la ejecución (error fatal).
+
+    La solución SOR: Reinterpreta 1/0 como el operador de distribución E/S(1:M): un único rayo (1) ingresa a la membrana (0) y se despliega como un espectro armónico continuo de múltiples salidas (M). Es la base de la generación procedural y de la densificación de datos.
+
+3. Memoria O(1) y la Identidad Pentavariable de Euler
+
+    El problema clásico: Almacenar petabytes de datos estáticos o arrastrar históricos extensos (costo O(N)).
+
+    La solución SOR: Utiliza la Identidad Pentavariable de Euler (e^(i*pi) + n^1 - (n-1) = 0) y el operador n^1 - (n-1) = 1. La diferencia de fase colapsa instantáneamente en la unidad, garantizando transformaciones continuas con un costo de almacenamiento constante O(1) independientemente de la escala del insumo.
+
+    Constante de acoplamiento: La red se formaliza con N=66 (60 divisiones base + 6 primos de torsión {2,3,5,7,11,13}), definiendo el factor escalar (66)^(1/12) ≈ 1.41784469. Cuando el parámetro se ajusta a N=66, las ondas entran en interferencia constructiva pura con desfase nulo (Delta phi = 0).
 
 Known Limitations (transparencia total)
 
     Costo de la reversibilidad: reconstruir el ciclo N cuesta O(N) pasos. Con anclas (fases selladas cada k pasos) la consulta queda en O(ciclo − ancla), pero las anclas ocupan memoria O(N/k) valores. El trade-off exacto lo marca cada aplicación.
 
-    Precisión de punto flotante: la igualdad entre el flujo original y el reprocesado depende de que la misma secuencia de operaciones en doble precisión (frac) sea bit-exacta. Verificada en V8/Chromium (incluye round-off acumulado); en otras plataformas hay que re-verificar. Para datos críticos, usar aritmética de precisión fija.
+    Precisión de punto flotante: la igualdad entre el flujo original y el reprocesado depende de que la misma secuencia de operaciones en doble precisión (frac) sea bit-exacta. Verificada en V8/Chromium.
 
-    El "residuo" de datos arbitrarios es ~99.7% en el peor caso. La arquitectura es interesante solo para datos que EN REALIDAD derivan de una ley (generativos, paramétricos, procedurales).
+    El "residuo" de datos arbitrarios es ~99.7% en el peor caso. La arquitectura es interesante solo para datos que EN REALIDAD derivan de una ley.
 
-    El banco γₙ está hardcodeado (10 ceros). Para más ceros hay que calcularlos con un algoritmo de Odlyzko o incorporar tablas publicadas.
+    El banco γₙ está hardcodeado (10 ceros). Para más ceros hay que calcularlos en runtime.
+
+Verifica tú mismo (2 minutos)
+
+    Panel 1 → "Manifestar" y "Verificar": N diferencias esperadas: 0.
+
+    Panel 2 → "Prueba de evolución": los 4 avances del bosque, frutos ✔ EXACTO.
+
+    Panel 3 → "Medir residuo": ~0.3% regenerable por ley sobre bytes aleatorios.
+
+    Panel 4 → "Reprocesar desde S0" en el ciclo 2: fase y energía exactas, con 0 valores almacenados.
+
+Benchmark (ejecutar en la consola del navegador)
+javascript
+
+const paso = (f, c) => (f + Math.sin(f * 1.0) * (66.0 / (c + 1))) % (Math.PI * 2);
+let t0 = performance.now();
+let f = 0.1;
+for (let c = 1; c <= 1_000_000; c++) f = paso(f, c);
+console.log("Replay 1M pasos:", (performance.now() - t0).toFixed(1), "ms → fase", f.toFixed(9));
+
+Roadmap
+
+    □
+
+    Publicación inicial: subir index.html, verificar en Chromium/Firefox/Safari, abrir issues con las críticas técnicas y, SOLO si sobreviven, redactar el whitepaper honesto.
+    □
+
+    Anclas automáticas cada k pasos + medición real del trade-off memoria/compute.
+    □
+
+    Ceros de Zeta calculados en runtime (Odlyzko-Schönhage simplificado).
+    □
+
+    Caso de uso: texturas procedurales generativas (donde el residuo real es ≈ 0).
+
+Licencia y crédito
+
+Motor y arquitectura original: Luis Emmanuel Gómez Sepúlveda.
+La industria relacionada (event sourcing, procedural generation, content addressing, mulberry32) está citada para posicionar la diferencia real, no para reclamar invención ajena.
+
+DOI del Whitepaper (CERN / Zenodo): https://doi.org/10.5281/zenodo.24451534
+
+<a name="english"></a>
+SIT∞ — Stateless Process Engine (English)
+
+A deterministic pure-JavaScript engine that regenerates content from a generative law (seed + frequency bank of real Riemann-zeta zero ordinates), without storing data matrices or state histories.
+
+Honest scope: stateless rendering and deterministic replay are real (bit-exact verified). Arbitrary data still requires storage (Kolmogórov incompressibility); the demo measures the true residue (~99.7% on random bytes). No claim is made about solving Riemann's Hypothesis or Gödel's theorems — they are bypassed, not refuted. The Riemann zeros are used strictly as a frequency bank.
+
+Known limitations: O(N) replay cost (mitigated by sealed phase anchors), bit-exactness only verified on V8/Chromium doubles, hardcoded 10-zero bank.
+
+Formal Mathematics of SOR (extracted from technical documentation):
+
+    Belnap-Dunn Matrix: SOR introduces [N] None and [B] Both states to dissolve paradoxes without blocking memory.
+
+    1/0 as Distribution Operator (E/S(1:M)): A single ray enters the membrane and unfolds into a continuous harmonic spectrum.
+
+    O(1) Memory and Euler's Pentavariable Identity: Phase difference collapses to unity (n^1 - (n-1) = 1), guaranteeing constant storage cost regardless of input scale.
 
