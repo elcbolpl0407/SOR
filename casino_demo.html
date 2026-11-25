@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOR · Provably Fair Topological Casino</title>
+<style>
+    :root { --bg: #050810; --panel: #0d1222; --border: #1e293b; --cyan: #00EAFF; --gold: #FFD700; --red: #FF2A2A; --green: #39FF14; --text: #E2E8F0; --mono: 'Courier New', monospace; }
+    body { background: var(--bg); color: var(--text); font-family: var(--mono); display: flex; flex-direction: column; align-items: center; padding: 20px; min-height: 100vh; margin: 0; }
+    .container { width: 100%; max-width: 600px; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: 0 0 30px rgba(0, 234, 255, 0.1); }
+    h1 { color: var(--gold); font-size: 1.2rem; text-align: center; margin-bottom: 5px; }
+    .sub { color: #64748b; font-size: 0.8rem; text-align: center; margin-bottom: 20px; }
+    
+    .wheel-container { position: relative; width: 300px; height: 300px; margin: 0 auto 20px auto; }
+    canvas { width: 100%; height: 100%; }
+    
+    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    button { background: rgba(0, 234, 255, 0.1); border: 1px solid var(--cyan); color: var(--cyan); padding: 15px; font-family: var(--mono); font-weight: bold; font-size: 0.9rem; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    button:hover { background: rgba(0, 234, 255, 0.2); }
+    button:active { background: var(--cyan); color: #000; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.red { border-color: var(--red); color: var(--red); background: rgba(255, 42, 42, 0.1); }
+    button.red:hover { background: rgba(255, 42, 42, 0.2); }
+    button.green { border-color: var(--green); color: var(--green); background: rgba(57, 255, 20, 0.1); }
+    button.green:hover { background: rgba(57, 255, 20, 0.2); }
+
+    .console { background: #000; border: 1px solid var(--border); padding: 15px; height: 220px; overflow-y: auto; font-size: 0.75rem; line-height: 1.5; color: var(--cyan); white-space: pre-wrap; border-radius: 6px; }
+    
+    .result-box { text-align: center; font-size: 2rem; font-weight: bold; margin: 15px 0; height: 40px; }
+    .result-box.win { color: var(--green); text-shadow: 0 0 10px var(--green); }
+    .result-box.lose { color: var(--red); text-shadow: 0 0 10px var(--red); }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>SOR · Provably Fair Casino</h1>
+    <div class="sub">Motor SIT∞ · Ceros de Riemann · Fase Sellada</div>
+    
+    <div class="wheel-container">
+        <canvas id="wheelCanvas" width="300" height="300"></canvas>
+    </div>
+
+    <div class="result-box" id="resultDisplay">-</div>
+
+    <div class="controls">
+        <button class="red" id="btnRojo" onclick="jugar('ROJO')">Apuesta ROJO</button>
+        <button class="green" id="btnVerde" onclick="jugar('VERDE')">Apuesta VERDE</button>
+    </div>
+
+    <div class="console" id="consoleOutput">> Motor iniciado. Esperando apuesta...
+> Fase actual del bosque: 0.0000</div>
+</div>
+
+<script>
+"use strict";
+
+// --- BANCO DE FRECUENCIAS: Ceros reales de Riemann ---
+const GAMMAS = [14.1347, 21.0220, 25.0109, 30.4249, 32.9351, 37.5862, 40.9187, 43.3271, 48.0052, 49.7738];
+const SEMILLA = 12345;
+const PI2 = Math.PI * 2;
+
+// --- ESTADO DEL MOTOR ---
+let faseGlobal = 0.0;
+let ciclo = 0;
+
+// --- ESTADO VISUAL ---
+let anguloActual = 0;
+let animando = false;
+const canvas = document.getElementById("wheelCanvas");
+const ctx = canvas.getContext("2d");
+
+function log(msg) {
+    const el = document.getElementById("consoleOutput");
+    el.textContent += "\n" + msg;
+    el.scrollTop = el.scrollHeight;
+}
+
+// --- DIBUJO DE LA RULETA ---
+function dibujarRuleta(angulo) {
+    const cx = 150, cy = 150, r = 140;
+    ctx.clearRect(0, 0, 300, 300);
+    
+    const sectores = 12;
+    for (let i = 0; i < sectores; i++) {
+        const start = (i * PI2) / sectores + angulo;
+        const end = ((i + 1) * PI2) / sectores + angulo;
+        
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r - 10, start, end);
+        ctx.closePath();
+        
+        ctx.fillStyle = i % 2 === 0 ? "#FF2A2A" : "#39FF14";
+        ctx.fill();
+    }
+    
+    // Círculo central
+    ctx.beginPath();
+    ctx.arc(cx, cy, 40, 0, PI2);
+    ctx.fillStyle = "#050810";
+    ctx.fill();
+    ctx.strokeStyle = "#00EAFF";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Flecha superior (indicador)
+    ctx.beginPath();
+    ctx.moveTo(cx, 10);
+    ctx.lineTo(cx - 10, 30);
+    ctx.lineTo(cx + 10, 30);
+    ctx.closePath();
+    ctx.fillStyle = "#00EAFF";
+    ctx.fill();
+}
+
+// --- LÓGICA DEL MOTOR (PROVABLY FAIR) ---
+function calcularResultado(apuesta) {
+    ciclo++;
+    // Avance determinista de la fase global
+    faseGlobal = (faseGlobal + Math.sin(faseGlobal * SEMILLA) * (66.0 / (ciclo + 1))) % PI2;
+    
+    // Resonancia con los ceros de Riemann
+    let sumaFrecuencias = 0;
+    for (let i = 0; i < GAMMAS.length; i++) {
+        sumaFrecuencias += Math.sin(GAMMAS[i] * faseGlobal);
+    }
+    
+    // Determinamos el resultado de forma determinista
+    const esRojo = Math.abs(sumaFrecuencias) % 2 < 1;
+    const resultado = esRojo ? 'ROJO' : 'VERDE';
+    const ganador = (apuesta === resultado);
+    
+    log(`\n--- CICLO ${ciclo} ---`);
+    log(`Fase Global (sellada): ${faseGlobal.toFixed(6)}`);
+    log(`Suma de resonancia: ${sumaFrecuencias.toFixed(6)}`);
+    log(`Resultado del motor: ${resultado}`);
+    log(`Apuesta del usuario: ${apuesta}`);
+    log(`Estado: ${ganador ? '✔ GANASTE' : '✘ PERDISTE'}`);
+    log(`[Auditoría] Semilla: ${SEMILLA} | Anti-fase: ${(PI2 - faseGlobal).toFixed(6)}`);
+    
+    // Devolvemos el índice del sector ganador para la animación
+    // Si es ROJO, buscamos un sector par. Si es VERDE, uno impar.
+    const sectorGanador = esRojo ? 0 : 1; // El ángulo se calculará en la animación
+    return { resultado, esRojo, ganador, sectorGanador };
+}
+
+// --- ANIMACIÓN DE GIRO ---
+function jugar(apuesta) {
+    if (animando) return;
+    animando = true;
+    
+    const btnR = document.getElementById("btnRojo");
+    const btnV = document.getElementById("btnVerde");
+    btnR.disabled = true;
+    btnV.disabled = true;
+    
+    const display = document.getElementById("resultDisplay");
+    display.textContent = "...";
+    display.className = "result-box";
+    
+    // 1. Calcular resultado ANTES de girar
+    const { resultado, esRojo, ganador } = calcularResultado(apuesta);
+    
+    // 2. Calcular el ángulo objetivo para que la flecha caiga en el sector ganador
+    // Los sectores pares (ROJO) están en ángulos 0, PI/3, 2PI/3, etc.
+    // Queremos que la flecha (arriba, ángulo -PI/2) apunte a un sector par o impar.
+    const sectores = 12;
+    const anguloBase = Math.random() * PI2; // Ángulo aleatorio dentro del sector
+    
+    // Si es ROJO (par), el ángulo final debe ser múltiplo de 2*PI/sectores
+    // Si es VERDE (impar), debe ser un múltiplo impar.
+    // Para simplificar, giramos varias vueltas y paramos en el sector correcto.
+    
+    // La flecha está en -PI/2 (arriba).
+    // Si queremos que el sector 0 (ROJO) esté en la flecha, el ángulo de rotación debe ser -PI/2.
+    // Para el sector 1 (VERDE), el ángulo es -PI/2 + PI/sectores.
+    
+    let anguloObjetivo;
+    if (esRojo) {
+        anguloObjetivo = -Math.PI / 2; // Sector 0
+    } else {
+        anguloObjetivo = -Math.PI / 2 + (PI2 / sectores); // Sector 1
+    }
+    
+    // Añadimos vueltas completas para el efecto visual
+    const vueltas = 5 + Math.random() * 3;
+    const anguloFinal = anguloObjetivo + (PI2 * Math.floor(vueltas));
+    
+    // 3. Animar el giro
+    const duracion = 3000; // 3 segundos
+    const inicio = performance.now();
+    const anguloInicial = anguloActual;
+    const deltaAngulo = anguloFinal - anguloInicial;
+    
+    function animarGiro(tiempo) {
+        const progreso = Math.min((tiempo - inicio) / duracion, 1);
+        // Easing out (frena al final)
+        const ease = 1 - Math.pow(1 - progreso, 4);
+        
+        anguloActual = anguloInicial + deltaAngulo * ease;
+        dibujarRuleta(anguloActual);
+        
+        if (progreso < 1) {
+            requestAnimationFrame(animarGiro);
+        } else {
+            animando = false;
+            btnR.disabled = false;
+            btnV.disabled = false;
+            
+            if (ganador) {
+                display.textContent = `¡${resultado}! GANASTE`;
+                display.className = "result-box win";
+            } else {
+                display.textContent = `¡${resultado}! PERDISTE`;
+                display.className = "result-box lose";
+            }
+        }
+    }
+    
+    requestAnimationFrame(animarGiro);
+}
+
+// --- INICIALIZACIÓN ---
+dibujarRuleta(0);
+log("> Motor Provably Fair cargado.");
+log("> Semilla: " + SEMILLA);
+log("> Fase actual: " + faseGlobal.toFixed(4));
+log("> Presiona ROJO o VERDE para apostar.");
+</script>
+</body>
+</html>
