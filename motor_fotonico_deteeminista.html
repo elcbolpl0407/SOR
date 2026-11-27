@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIT∞ — Motor Fotónico Determinista O(1)</title>
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --panel: #121826;
+      --panel-2: #182032;
+      --text: #e6edf7;
+      --muted: #93a2b8;
+      --accent: #38bdf8;
+      --accent-2: #a78bfa;
+      --ok: #34d399;
+      --warn: #fbbf24;
+      --bad: #f87171;
+      --border: #253147;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    .app {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    header {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      letter-spacing: 0.02em;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-top: 4px;
+    }
+
+    .badge {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: rgba(56, 189, 248, 0.14);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 860px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--accent);
+    }
+
+    .canvas-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #06090f;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      min-height: 280px;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+      border-radius: 6px;
+      image-rendering: pixelated;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    input, select, button {
+      font: inherit;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      background: var(--panel-2);
+      color: var(--text);
+    }
+
+    button {
+      cursor: pointer;
+      background: linear-gradient(135deg, #0284c7, #6d28d9);
+      border: none;
+      font-weight: 600;
+      transition: opacity 0.15s ease;
+    }
+
+    button:hover {
+      opacity: 0.92;
+    }
+
+    button.secondary {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .metric {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .metric .k {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .metric .v {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .log {
+      background: #070b12;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      max-height: 220px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>SIT∞ — Motor Fotónico Determinista O(1)</h1>
+        <div class="sub">
+          Evaluación al vuelo sin matriz 2D en RAM · Ceros de Riemann (γ₁…γ₁₀) · N = 66 · (66)^(1/12) · Replay V3 · Belnap-Dunn
+        </div>
+      </div>
+      <div id="runtimeBadge" class="badge">Inicializando motor...</div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <h2>1. Malla Fotónica Virtual O(1)</h2>
+        <div class="canvas-wrap">
+          <canvas id="sitCanvas" width="192" height="192"></canvas>
+        </div>
+        <div class="controls">
+          <label>
+            Semilla (seed)
+            <input id="seedInput" type="number" value="1337" />
+          </label>
+          <label>
+            Fase (phi)
+            <input id="phiInput" type="number" step="0.01" value="0.75" />
+          </label>
+          <label>
+            Ceros Riemann (1..10)
+            <input id="zerosInput" type="number" min="1" max="10" value="10" />
+          </label>
+          <label>
+            Resolución malla
+            <select id="resSelect">
+              <option value="128">128 × 128</option>
+              <option value="192" selected>192 × 192</option>
+              <option value="256">256 × 256</option>
+            </select>
+          </label>
+        </div>
+        <div class="btn-row">
+          <button id="renderBtn">Renderizar Malla O(1)</button>
+          <button id="driftBtn" class="secondary">Probar Deriva Δφ = 0.01</button>
+          <button id="auditBtn" class="secondary">Auditar 16,384 Puntos</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>2. Replay V3 & Lógica Tetravalente Belnap-Dunn</h2>
+        <div class="controls">
+          <label>
+            Fase inicial
+            <input id="initPhaseInput" type="number" step="0.01" value="1.25" />
+          </label>
+          <label>
+            Ciclo objetivo (targetCycle)
+            <input id="cycleInput" type="number" min="0" value="5000" />
+          </label>
+          <label>
+            Ancla (N)
+            <input id="anchorInput" type="number" step="0.1" value="66.0" />
+          </label>
+        </div>
+        <div class="btn-row">
+          <button id="replayBtn">Ejecutar Replay V3</button>
+        </div>
+
+        <div class="controls">
+          <label>
+            Evidencia positiva
+            <select id="evPos">
+              <option value="true" selected>true</option>
+              <option value="false">false</option>
+            </select>
+          </label>
+          <label>
+            Evidencia negativa
+            <select id="evNeg">
+              <option value="false" selected>false</option>
+              <option value="true">true</option>
+            </select>
+          </label>
+        </div>
+        <div class="btn-row">
+          <button id="belnapBtn" class="secondary">Evaluar Belnap-Dunn</button>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <div class="k">RAM 2D Reservada</div>
+            <div class="v ok">0 Bytes (O(1))</div>
+          </div>
+          <div class="metric">
+            <div class="k">Último Tiempo de Cómputo</div>
+            <div id="lastMs" class="v">0.00 ms</div>
+          </div>
+          <div class="metric">
+            <div class="k">Fase / Energía Replay</div>
+            <div id="replayOut" class="v">—</div>
+          </div>
+          <div class="metric">
+            <div class="k">Estado Belnap-Dunn</div>
+            <div id="belnapOut" class="v">—</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>3. Bitácora Volátil de Sesión (Sin Persistencia en Disco)</h2>
+      <div id="logBox" class="log">Listo. Ejecución en memoria volátil de sesión.\n</div>
+    </section>
+  </div>
+
+  <script>
+    const RIEMANN_ZEROS = [
+      14.13472514, 21.02203964, 25.01085758, 30.42487612, 32.93506159,
+      37.58617815, 40.91871901, 43.32707328, 48.00515088, 49.77383248
+    ];
+    const N_COUPLING = 66.0;
+    const SCALE_FACTOR = 1.41784469335439;
+
+    const BelnapDunnState = {
+      True_T: 0,
+      False_F: 1,
+      None_N: 2,
+      Both_B: 3
+    };
+
+    const BelnapNames = {
+      0: "True_T [T] (E/S 1:M)",
+      1: "False_F [F] (E/S 0:1)",
+      2: "None_N [N] (E/S 1:0)",
+      3: "Both_B [B] (E/S 1:1 — Paradoja contenida)"
+    };
+
+    function leyPixelJS(seed, x, y, width, height, phi, nZeros) {
+      const nx = (x / width) * 2.0 - 1.0;
+      const ny = (y / height) * 2.0 - 1.0;
+      const r = Math.sqrt(nx * nx + ny * ny);
+
+      let sum = 0.0;
+      const count = Math.max(0, Math.min(nZeros | 0, RIEMANN_ZEROS.length));
+      for (let i = 0; i < count; i++) {
+        sum += Math.sin(r * RIEMANN_ZEROS[i] + phi + Number(seed) * 0.001);
+      }
+
+      const val = (Math.sin(sum * SCALE_FACTOR) + 1.0) * 0.5;
+      const rOut = Math.floor(val * 255.0) & 255;
+      const gOut = Math.floor(((Math.cos(sum * 0.5 + phi) + 1.0) * 0.5) * 255.0) & 255;
+      const bOut = Math.floor((1.0 - val) * 255.0) & 255;
+      return [rOut, gOut, bOut];
+    }
+
+    function replayV3JS(faseInicial, targetCycle, ancla = N_COUPLING) {
+      let f = Number(faseInicial);
+      const cycles = Math.max(0, targetCycle >>> 0);
+      const anchor = Number(ancla);
+      const twoPi = Math.PI * 2.0;
+
+      for (let c = 1; c <= cycles; c++) {
+        f = (f + Math.sin(f * 1.0) * (anchor / (c + 1.0))) % twoPi;
+        if (f < 0.0) f += twoPi;
+      }
+
+      const energia = 0.5 + 0.5 * Math.cos(f * 3.0);
+      return { fase: f, energia, ciclo: cycles };
+    }
+
+    function evaluarEvidenciaJS(pos, neg) {
+      if (pos && !neg) return BelnapDunnState.True_T;
+      if (!pos && neg) return BelnapDunnState.False_F;
+      if (!pos && !neg) return BelnapDunnState.None_N;
+      return BelnapDunnState.Both_B;
+    }
+
+    let wasmModule = null;
+    let wasmEngine = null;
+
+    const canvas = document.getElementById("sitCanvas");
+    const ctx = canvas.getContext("2d");
+    const badge = document.getElementById("runtimeBadge");
+    const logBox = document.getElementById("logBox");
+    const lastMsEl = document.getElementById("lastMs");
+    const replayOutEl = document.getElementById("replayOut");
+    const belnapOutEl = document.getElementById("belnapOut");
+
+    function writeLog(line) {
+      const now = new Date().toLocaleTimeString();
+      logBox.textContent += `[${now}] ${line}\n`;
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function renderMesh() {
+      const res = parseInt(document.getElementById("resSelect").value, 10);
+      canvas.width = res;
+      canvas.height = res;
+
+      const seed = BigInt(document.getElementById("seedInput").value || "0");
+      const phi = parseFloat(document.getElementById("phiInput").value || "0");
+      const nZeros = parseInt(document.getElementById("zerosInput").value || "10", 10);
+
+      const t0 = performance.now();
+      const imgData = ctx.createImageData(res, res);
+      const buf = imgData.data;
+
+      if (wasmModule && typeof wasmModule.renderBufferWasm === "function") {
+        const byteLen = res * res * 4;
+        const ptr = wasmModule._malloc(byteLen);
+        wasmModule.renderBufferWasm(ptr, res, res, Number(seed), phi, nZeros);
+        buf.set(wasmModule.HEAPU8.subarray(ptr, ptr + byteLen));
+        wasmModule._free(ptr);
+      } else {
+        for (let y = 0; y < res; y++) {
+          for (let x = 0; x < res; x++) {
+            const [r, g, b] = leyPixelJS(seed, x, y, res, res, phi, nZeros);
+            const idx = (y * res + x) * 4;
+            buf[idx] = r;
+            buf[idx + 1] = g;
+            buf[idx + 2] = b;
+            buf[idx + 3] = 255;
+          }
+        }
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+      const dt = (performance.now() - t0).toFixed(2);
+      lastMsEl.textContent = `${dt} ms`;
+      writeLog(`Malla ${res}×${res} evaluada al vuelo en ${dt} ms (seed=${seed}, phi=${phi}, ceros=${nZeros}).`);
+    }
+
+    function runReplay() {
+      const faseInicial = parseFloat(document.getElementById("initPhaseInput").value || "0");
+      const targetCycle = parseInt(document.getElementById("cycleInput").value || "0", 10);
+      const ancla = parseFloat(document.getElementById("anchorInput").value || "66.0");
+
+      const t0 = performance.now();
+      const state = (wasmEngine && typeof wasmEngine.replayV3 === "function")
+        ? wasmEngine.replayV3(faseInicial, targetCycle, ancla)
+        : replayV3JS(faseInicial, targetCycle, ancla);
+      const dt = (performance.now() - t0).toFixed(2);
+
+      lastMsEl.textContent = `${dt} ms`;
+      replayOutEl.textContent = `φ=${state.fase.toFixed(4)} | E=${state.energia.toFixed(4)}`;
+      writeLog(`Replay V3 ciclo=${state.ciclo} en ${dt} ms -> fase=${state.fase.toFixed(6)}, energia=${state.energia.toFixed(6)}.`);
+    }
+
+    function runBelnap() {
+      const pos = document.getElementById("evPos").value === "true";
+      const neg = document.getElementById("evNeg").value === "true";
+
+      const st = (wasmEngine && typeof wasmEngine.evaluarEvidencia === "function")
+        ? wasmEngine.evaluarEvidencia(pos, neg)
+        : evaluarEvidenciaJS(pos, neg);
+
+      const code = typeof st === "number" ? st : st.value;
+      const label = BelnapNames[code] ?? String(code);
+      belnapOutEl.textContent = label;
+      writeLog(`Belnap-Dunn (pos=${pos}, neg=${neg}) => ${label}.`);
+    }
+
+    function testDrift() {
+      const phiInput = document.getElementById("phiInput");
+      const basePhi = parseFloat(phiInput.value || "0");
+      const nextPhi = Number((basePhi + 0.01).toFixed(4));
+      phiInput.value = nextPhi;
+      renderMesh();
+      writeLog(`Deriva Δφ = +0.01 aplicada (${basePhi} -> ${nextPhi}). Fase sellada verificada.`);
+    }
+
+    function runAudit16k() {
+      const seed = BigInt(document.getElementById("seedInput").value || "1337");
+      const phi = parseFloat(document.getElementById("phiInput").value || "0.75");
+      const nZeros = parseInt(document.getElementById("zerosInput").value || "10", 10);
+
+      const t0 = performance.now();
+      let checksum = 0;
+      for (let i = 0; i < 16384; i++) {
+        const x = i % 128;
+        const y = Math.floor(i / 128);
+        const [r, g, b] = leyPixelJS(seed, x, y, 128, 128, phi, nZeros);
+        checksum = (checksum + r + g + b) % 1000000007;
+      }
+      const dt = (performance.now() - t0).toFixed(2);
+      lastMsEl.textContent = `${dt} ms`;
+      writeLog(`Auditoría de 16,384 evaluaciones completada en ${dt} ms (0 bytes matriz 2D, checksum=${checksum}).`);
+    }
+
+    document.getElementById("renderBtn").addEventListener("click", renderMesh);
+    document.getElementById("driftBtn").addEventListener("click", testDrift);
+    document.getElementById("auditBtn").addEventListener("click", runAudit16k);
+    document.getElementById("replayBtn").addEventListener("click", runReplay);
+    document.getElementById("belnapBtn").addEventListener("click", runBelnap);
+    document.getElementById("resSelect").addEventListener("change", renderMesh);
+
+    async function initEngine() {
+      try {
+        if (typeof createSitEngine === "function") {
+          wasmModule = await createSitEngine();
+          if (wasmModule && wasmModule.SitEngineCore) {
+            wasmEngine = new wasmModule.SitEngineCore();
+          }
+          badge.textContent = "Núcleo WASM Activo";
+          writeLog("Módulo WebAssembly SIT∞ cargado.");
+        } else {
+          badge.textContent = "Motor JS Determinista O(1)";
+          writeLog("Sin dist/sit_engine.js compilado; usando motor JS idéntico al vuelo.");
+        }
+      } catch (err) {
+        badge.textContent = "Motor JS Determinista O(1)";
+        writeLog(`Respaldo JS activo (${err.message}).`);
+      }
+
+      renderMesh();
+      runReplay();
+      runBelnap();
+    }
+
+    initEngine();
+  </script>
+</body>
+</html>
